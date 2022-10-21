@@ -1,5 +1,5 @@
 import pymysql
-
+import math
 
 class BotDB:
 
@@ -10,30 +10,19 @@ class BotDB:
         print("Работа с базой данных завершена")
         self.connect.close()
 
-    def user_exists(self, user_id):
-        # Проверка есть ли данный пользователь в базе дынных
-        with self.connect.cursor() as cursor:
-            cursor.execute("SELECT * FROM users WHERE Telegram_id = %s", user_id)
 
-            self.connect.commit()
-            row = cursor.fetchall()
-            cursor.close()
-            # print(len(row))
-            if len(row) == 0:
-                return True
-            else:
-                return False
 
-    def user_add(self, user_id: int):
+    def user_add(self, user_id: int) -> object:
         # Добавляем юзера в бд
         try:
 
             with self.connect.cursor() as cursor:
-                cursor.execute("INSERT INTO users (Telegram_id) VALUE (%s)", user_id)
+                cursor.execute("INSERT INTO users (Telegram_id,Number_of_likes) VALUES (%s,0)", user_id)
             self.connect.commit()
-        except:
-            print("Работа с базой данных завершена")
-            self.connect.close()
+            return True
+        except Exception as e:
+            print(e)
+            return False
 
     def get_all_attractions(self):
         # Берем все достопримечательности
@@ -104,3 +93,22 @@ class BotDB:
             return False
         else:
             return True
+    #Ишем ближашую достопримечательность
+    def get_attraction_with_location(self, latitude, longitude):
+        with self.connect.cursor() as cursor:
+            cursor.execute(
+                'SELECT id, latitude, longitude from attractions')
+            attractions = cursor.fetchall()
+            id = 0
+            maxx:float = 10000000.1
+            for attraction in attractions:
+                latitude1 = attraction[1]
+                longitude1 = attraction[2]
+                length = math.sqrt(abs(latitude1 - latitude)*abs(latitude1 - latitude)+abs(longitude1 - longitude)*abs(longitude1-longitude))
+                if maxx>length:
+                    maxx = length
+                    id = attraction[0]
+            cursor.close()
+            print(id)
+            return id
+
