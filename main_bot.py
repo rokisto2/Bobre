@@ -63,15 +63,7 @@ async def get_all_attractions(message: types.Message):
     attractions = db.get_like_attraction_from_user(message.from_user.id)
 
     for attraction in attractions:
-        keyboard = types.InlineKeyboardMarkup(row_width=2)
-        buttons = [
-            types.InlineKeyboardButton(text='🗑', callback_data=cd_like.new(id_user=message.from_user.id,
-                                                                            id_attraction=attraction[0],
-                                                                            types='del')),
-            types.InlineKeyboardButton(text='Узнать больше',
-                                       callback_data=cd_learn_more.new(id_attraction=attraction[0]))
-        ]
-        keyboard.add(*buttons)
+        keyboard = KeyboardMarkup.what_datail(message.from_user.id, attraction[0], db)
 
         await bot.send_photo(message.chat.id, db.get_attraction_img(attraction[0])[0][0],
                              caption=attraction[1] + '\n' + attraction[2],
@@ -83,6 +75,7 @@ async def callback_learn_more(call: types.CallbackQuery, callback_data: dict):
     id_attraction = callback_data['id_attraction']
     attraction = db.get_attraction(id_attraction)
     attraction_img = db.get_attraction_img(id_attraction)
+
     if len(attraction_img) == 1:
         await bot.send_photo(call.message.chat.id, attraction_img[0][0])
     else:
